@@ -1,0 +1,312 @@
+// Lendermarket Investor Relations AI Copilot - database schema.
+//
+// Privacy note: there is intentionally NO ChatSession or Message table.
+// Investor conversations live only in the browser tab's memory. The database
+// stores knowledge, configuration, admin data and privacy-safe analytics only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Administration
+// ---------------------------------------------------------------------------
+
+enum AdminRole {
+  OWNER // full access incl. admin user management
+  ADMIN // full content + configuration access
+  EDITOR // knowledge base and FAQ management
+  VIEWER // read-only dashboards
+}
+
+model AdminUser {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String
+  role         AdminRole      @default(VIEWER)
+  passwordHash String // scrypt hash, never plaintext
+  disabled     Boolean        @default(false)
+  lastLoginAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  sessions     AdminSession[]
+  auditLogs    AuditLog[]
+}
+
+model AdminSession {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique // SHA-256 of the session token; raw token only lives in the cookie
+  adminUserId String
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  @@index([adminUserId])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id          String     @id @default(cuid())
+  adminUserId String?
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  action      String
+  targetType  String
+  targetId    String?
+  metadata    Json?
+  timestamp   DateTime   @default(now())
+
+  @@index([timestamp])
+  @@index([adminUserId])
+}
+
+// ---------------------------------------------------------------------------
+// Languages and configuration
+// ---------------------------------------------------------------------------
+
+model SupportedLanguage {
+  code       String  @id // en, et, es, it, fr, de, pl
+  name       String
+  nativeName String
+  enabled    Boolean @default(true)
+  sortOrder  Int     @default(0)
+}
+
+model SuggestedQuestion {
+  id        String   @id @default(cuid())
+  position  Int // 1..n - questions with the same position are translations of each other
+  language  String
+  text      String
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@unique([position, language])
+}
+
+model SystemConfiguration {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge base
+// ---------------------------------------------------------------------------
+
+model KnowledgeCategory {
+  id          String              @id @default(cuid())
+  slug        String              @unique
+  name        String
+  description String?
+  sortOrder   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  documents   KnowledgeDocument[]
+  faqs        FAQ[]
+  websites    WebsiteSource[]
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum PublicationStatus {
+  DRAFT // not used in answers
+  PUBLISHED // approved by an administrator - used in answers when processing is READY
+  ARCHIVED // never used in answers
+}
+
+enum DocumentSourceType {
+  UPLOAD
+  WEBSITE
+}
+
+model KnowledgeDocument {
+  id                String             @id @default(cuid())
+  // All versions of the same document share a groupId.
+  groupId           String
+  version           Int                @default(1)
+  title             String
+  description       String?
+  categoryId        String
+  category          KnowledgeCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  language          String
+  sourceType        DocumentSourceType @default(UPLOAD)
+  storageKey        String? // private object key; never exposed publicly
+  fileName          String?
+  mimeType          String?
+  fileSize          Int?
+  checksum          String?
+  sourceUrl         String? // official public URL used for citations
+  // When true and no sourceUrl exists, investors may open the file through the public source route.
+  publicViewEnabled Boolean            @default(false)
+  processingStatus  ProcessingStatus   @default(PENDING)
+  processingError   String?
+  publicationStatus PublicationStatus  @default(DRAFT)
+  effectiveAt       DateTime?
+  lastReviewedAt    DateTime?
+  createdById       String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  chunks            DocumentChunk[]
+  websiteSource     WebsiteSource?
+
+  @@unique([groupId, version])
+  @@index([publicationStatus, processingStatus])
+  @@index([categoryId])
+}
+
+model DocumentChunk {
+  id             String            @id @default(cuid())
+  documentId     String
+  document       KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content        String
+  heading        String?
+  chunkIndex     Int
+  pageNumber     Int?
+  // Embedding stored as double precision[]; see docs/ARCHITECTURE.md for the pgvector upgrade path.
+  embedding      Float[]
+  embeddingModel String?
+  createdAt      DateTime          @default(now())
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+}
+
+model StoredFile {
+  id         String   @id @default(cuid())
+  storageKey String   @unique
+  data       Bytes
+  mimeType   String
+  size       Int
+  createdAt  DateTime @default(now())
+}
+
+model FAQ {
+  id                 String            @id @default(cuid())
+  // FAQs sharing a translationGroupId are translations of the same entry.
+  translationGroupId String
+  question           String
+  answer             String
+  categoryId         String
+  category           KnowledgeCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  language           String
+  sourceUrl          String?
+  approvalStatus     PublicationStatus @default(DRAFT)
+  isExample          Boolean           @default(false) // demonstration content - never official fact
+  embedding          Float[]
+  embeddingModel     String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@unique([translationGroupId, language])
+  @@index([approvalStatus, language])
+  @@index([categoryId])
+}
+
+enum WebsiteApprovalStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model WebsiteSource {
+  id                 String                @id @default(cuid())
+  url                String                @unique
+  title              String?
+  enabled            Boolean               @default(true)
+  approvalStatus     WebsiteApprovalStatus @default(PENDING_REVIEW)
+  categoryId         String
+  category           KnowledgeCategory     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  language           String
+  // Fetched text waiting for approval (initial import or a detected change).
+  pendingContent     String?
+  pendingContentHash String?
+  contentHash        String? // hash of the currently approved content
+  documentId         String?               @unique
+  document           KnowledgeDocument?    @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  syncEnabled        Boolean               @default(false) // Phase 2 automatic sync - disabled by default
+  lastFetchedAt      DateTime?
+  lastCheckedAt      DateTime?
+  lastError          String?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// AI configuration (no API keys here - keys live in environment variables)
+// ---------------------------------------------------------------------------
+
+model AIProviderConfig {
+  id           String   @id @default(cuid())
+  providerName String // "anthropic" | "openai"
+  modelName    String
+  enabled      Boolean  @default(true)
+  active       Boolean  @default(false) // exactly one active config
+  isFallback   Boolean  @default(false) // at most one fallback config
+  // Provider-specific settings validated server-side: temperature, maxOutputTokens, effort, timeoutMs.
+  settings     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([providerName, modelName])
+}
+
+model OperationalError {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  source    String // e.g. "chat", "ingestion", "website-sync", "embeddings"
+  provider  String?
+  code      String
+  message   String // sanitized: never contains user text, keys or stack traces
+
+  @@index([timestamp])
+}
+
+// ---------------------------------------------------------------------------
+// Privacy-safe analytics: no message text, no IP, no identifiers of investors.
+// ---------------------------------------------------------------------------
+
+model ChatAnalyticsEvent {
+  id            String   @id @default(cuid())
+  timestamp     DateTime @default(now())
+  // Random id generated per browser tab session; cannot be linked to a person.
+  anonSessionId String?
+  eventType     String // SESSION_START | QUESTION | ERROR | FEEDBACK
+  language      String?
+  category      String? // knowledge category slug or "uncategorized"
+  answered      Boolean?
+  answerStatus  String? // answered | insufficient_information | error | blocked
+  escalated     Boolean  @default(false)
+  latencyMs     Int?
+  inputTokens   Int?
+  outputTokens  Int?
+  tokenCount    Int?
+  estimatedCost Float?
+  provider      String?
+  model         String?
+  feedback      Int? // 1 = helpful, -1 = not helpful
+
+  @@index([timestamp])
+  @@index([eventType, timestamp])
+}
+
+model EscalationEvent {
+  id              String   @id @default(cuid())
+  timestamp       DateTime @default(now())
+  category        String?
+  reasonCode      String
+  destinationType String // "link" | "email"
+  status          String // "offered" | "clicked"
+  language        String?
+
+  @@index([timestamp])
+}
