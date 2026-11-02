@@ -21,7 +21,7 @@
   "sources.faq": "Domande frequenti",
   "sources.document": "Documento ufficiale",
   "notice.disclaimer": "Questo assistente IA fornisce solo informazioni generali e non offre consulenza finanziaria personalizzata.",
-  "notice.privacy": "Non condividere password, codici di verifica, dati bancari o documenti d'identità in questa chat. Le conversazioni non vengono salvate e vengono cancellate alla chiusura della pagina.",
+  "notice.privacy": "Non condividere password, codici di verifica, dati bancari o documenti d'identità in questa chat. Le conversazioni non vengono salvate sui nostri server: restano solo in questa scheda del browser e vengono eliminate quando la chiudi o cancelli la chat.",
   "notice.privacyTitle": "Privacy",
   "notice.accountSpecific": "Per domande relative al tuo conto, contatta l'assistenza Lendermarket tramite un canale verificato.",
   "notice.redacted": "Per la tua sicurezza, alcuni dati personali sono stati rimossi dal messaggio prima dell'elaborazione.",

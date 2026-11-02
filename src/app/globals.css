@@ -127,3 +127,10 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Keep the composer placeholder on one line on narrow screens. */
+.lm-composer::placeholder {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

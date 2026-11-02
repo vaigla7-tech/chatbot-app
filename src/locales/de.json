@@ -21,7 +21,7 @@
   "sources.faq": "Häufig gestellte Fragen",
   "sources.document": "Offizielles Dokument",
   "notice.disclaimer": "Dieser KI-Assistent bietet ausschließlich allgemeine Informationen und keine persönliche Finanzberatung.",
-  "notice.privacy": "Bitte teilen Sie in diesem Chat keine Passwörter, Bestätigungscodes, Bankdaten oder Ausweisdokumente. Gespräche werden nicht gespeichert und beim Schließen dieser Seite gelöscht.",
+  "notice.privacy": "Bitte teilen Sie in diesem Chat keine Passwörter, Bestätigungscodes, Bankdaten oder Ausweisdokumente. Gespräche werden nicht auf unseren Servern gespeichert: Sie bleiben nur in diesem Browser-Tab und werden gelöscht, wenn Sie ihn schließen oder den Chat löschen.",
   "notice.privacyTitle": "Datenschutz",
   "notice.accountSpecific": "Bei Fragen zu Ihrem eigenen Konto wenden Sie sich bitte über einen verifizierten Kanal an den Lendermarket-Support.",
   "notice.redacted": "Zu Ihrer Sicherheit wurden einige persönliche Daten vor der Verarbeitung aus Ihrer Nachricht entfernt.",

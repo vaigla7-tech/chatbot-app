@@ -28,7 +28,7 @@ import { useChat, type ChatMessage } from "./use-chat";
 type Mode = "page" | "widget";
 
 export function ChatApp({ mode = "page", preferredLanguage }: { mode?: Mode; preferredLanguage?: string | null }) {
-  const chat = useChat({ preferredLanguage });
+  const chat = useChat({ preferredLanguage, storageKey: mode === "widget" ? "lm-chat-widget-v1" : undefined });
   const { messages, uiLanguage, config, busy } = chat;
   const tr = (key: MessageKey, vars?: Record<string, string | number>) => t(uiLanguage, key, vars);
   const [input, setInput] = useState("");
@@ -194,7 +194,7 @@ export function ChatApp({ mode = "page", preferredLanguage }: { mode?: Mode; pre
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
               placeholder={tr("input.placeholder")}
-              className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[15px] leading-6 text-ink placeholder:text-muted focus:outline-none"
+              className="lm-composer max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[15px] leading-6 text-ink placeholder:text-muted focus:outline-none focus-visible:outline-none"
               enterKeyHint="send"
               autoComplete="off"
             />
@@ -509,7 +509,7 @@ function PrivacyNotice({ language, policyUrl }: { language: LanguageCode; policy
         {t(language, "notice.privacyTitle")}
       </button>
       {open && (
-        <span className="mt-1 block text-[11px] text-ink">
+        <span className="mt-1 block max-h-20 overflow-y-auto text-[11px] text-ink">
           {t(language, "notice.privacy")}{" "}
           {policyUrl && (
             <a href={policyUrl} target="_blank" rel="noopener noreferrer" className="text-ocean underline">

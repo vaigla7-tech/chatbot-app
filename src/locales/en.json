@@ -21,7 +21,7 @@
   "sources.faq": "Frequently Asked Questions",
   "sources.document": "Official document",
   "notice.disclaimer": "This AI assistant provides general information only and does not offer personalized financial advice.",
-  "notice.privacy": "Please do not share passwords, verification codes, banking details or identity documents in this chat. Conversations are not stored and are cleared when you close this page.",
+  "notice.privacy": "Please do not share passwords, verification codes, banking details or identity documents in this chat. Conversations are not stored on our servers: they stay only in this browser tab and are deleted when you close it or clear the chat.",
   "notice.privacyTitle": "Privacy",
   "notice.accountSpecific": "For questions about your own account, please contact Lendermarket Support through a verified channel.",
   "notice.redacted": "For your security, some personal details were removed from your message before it was processed.",

@@ -4,6 +4,7 @@ import { env } from "./env";
 import { resolveSettings } from "./ai/capabilities";
 import type { GenerationSettings, ProviderName } from "./ai/types";
 import { LANGUAGE_CODES, type LanguageCode } from "./languages";
+import { DEFAULT_SUGGESTED_QUESTIONS } from "./defaults";
 
 /** Typed, validated system configuration stored in the SystemConfiguration table. */
 export const configSchemas = {
@@ -47,7 +48,14 @@ const TTL_MS = 15_000;
 export async function getConfig<K extends ConfigKey>(key: K): Promise<ConfigValue<K>> {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL_MS) return hit.value as ConfigValue<K>;
-  const row = await prisma.systemConfiguration.findUnique({ where: { key } });
+  let row: { value: unknown } | null;
+  try {
+    row = await prisma.systemConfiguration.findUnique({ where: { key } });
+  } catch {
+    // Database unreachable: serve defaults so the public chat keeps rendering.
+    // Not cached, so the stored configuration is used again as soon as the database is back.
+    return configSchemas[key].parse({}) as ConfigValue<K>;
+  }
   const parsed = configSchemas[key].safeParse(row?.value ?? {});
   const value = (parsed.success ? parsed.data : configSchemas[key].parse({})) as ConfigValue<K>;
   cache.set(key, { value, at: Date.now() });
@@ -92,10 +100,15 @@ export async function getActiveModels(): Promise<ActiveModels> {
 }
 
 export async function getSuggestedQuestions(language: LanguageCode): Promise<string[]> {
-  const rows = await prisma.suggestedQuestion.findMany({
-    where: { enabled: true, language: { in: [language, "en"] } },
-    orderBy: { position: "asc" },
-  });
+  let rows: Array<{ position: number; language: string; text: string }>;
+  try {
+    rows = await prisma.suggestedQuestion.findMany({
+      where: { enabled: true, language: { in: [language, "en"] } },
+      orderBy: { position: "asc" },
+    });
+  } catch {
+    return [...DEFAULT_SUGGESTED_QUESTIONS[language]];
+  }
   const byPosition = new Map<number, string>();
   for (const row of rows) {
     if (row.language === language || !byPosition.has(row.position)) byPosition.set(row.position, row.text);

@@ -21,7 +21,7 @@
   "sources.faq": "Questions fréquentes",
   "sources.document": "Document officiel",
   "notice.disclaimer": "Cet assistant IA fournit uniquement des informations générales et ne propose pas de conseil financier personnalisé.",
-  "notice.privacy": "Ne partagez pas de mots de passe, codes de vérification, coordonnées bancaires ou pièces d'identité dans cette conversation. Les conversations ne sont pas enregistrées et sont effacées à la fermeture de cette page.",
+  "notice.privacy": "Ne partagez pas de mots de passe, codes de vérification, coordonnées bancaires ou pièces d'identité dans cette conversation. Les conversations ne sont pas enregistrées sur nos serveurs : elles restent uniquement dans cet onglet du navigateur et sont supprimées lorsque vous le fermez ou effacez la conversation.",
   "notice.privacyTitle": "Confidentialité",
   "notice.accountSpecific": "Pour toute question concernant votre compte, veuillez contacter le support Lendermarket via un canal vérifié.",
   "notice.redacted": "Pour votre sécurité, certaines données personnelles ont été supprimées de votre message avant son traitement.",

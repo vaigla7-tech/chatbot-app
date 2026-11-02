@@ -6,7 +6,7 @@ This document supports the privacy and legal review before production launch. Im
 
 | Data | Where | Retention |
 |---|---|---|
-| Investor chat messages and answers | Browser memory only; sent per request to the server and the configured AI provider | Not stored by this app. Cleared on refresh or close. Provider-side retention follows the AI provider's API terms and DPA. |
+| Investor chat messages and answers | Browser memory, mirrored to the tab's `sessionStorage` so a reload keeps the conversation; sent per request to the server and the configured AI provider | Never stored on the server. Deleted by the browser when the tab is closed, or immediately with Clear chat. Provider-side retention follows the AI provider's API terms and DPA. |
 | Personal data typed into the chat | Redacted on a best-effort basis before reaching the AI provider (e-mail, IBAN, card, national ID, phone, secrets) | Not stored |
 | Analytics events | PostgreSQL `ChatAnalyticsEvent`: timestamp, language, topic category, answer status, latency, token counts, cost, random per-tab session id, feedback ±1 | Configurable (default 180 days), then deleted |
 | Escalation events | `EscalationEvent`: reason code, category, language, destination type | Same retention |
@@ -15,7 +15,7 @@ This document supports the privacy and legal review before production launch. Im
 | Administrator data | `AdminUser` (name, e-mail, role, password hash), `AdminSession`, `AuditLog` | Until removed. Sessions expire after 8 h. |
 | Knowledge documents | Private storage plus extracted chunks | Until an admin deletes them |
 
-No cookies are set for investors. The only cookie is the admin session cookie, which is strictly necessary. The chat does not use `localStorage` or `sessionStorage`.
+No cookies are set for investors. The only cookie is the admin session cookie, which is strictly necessary. The chat keeps the current conversation in the tab's `sessionStorage` (strictly necessary for the requested service, scoped to one tab, cleared on close) and never uses `localStorage`. On a shared computer, an investor should press Clear chat or close the tab.
 
 ## Third parties (processors)
 

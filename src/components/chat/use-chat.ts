@@ -48,11 +48,50 @@ function initialLanguage(preferred?: string | null): LanguageCode {
   return DEFAULT_LANGUAGE;
 }
 
+const STORAGE_KEY = "lm-chat-v1";
+const MAX_STORED_MESSAGES = 60;
+
+interface StoredChat {
+  messages: ChatMessage[];
+  uiLanguage: LanguageCode;
+  explicitLanguage: LanguageCode | null;
+  sessionId: string;
+}
+
+/** Read the conversation saved in this browser tab (sessionStorage), if any. */
+export function loadStoredChat(key: string): StoredChat | null {
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as StoredChat;
+    if (!Array.isArray(data.messages) || !isLanguageCode(data.uiLanguage)) return null;
+    return {
+      ...data,
+      explicitLanguage: isLanguageCode(data.explicitLanguage) ? data.explicitLanguage : null,
+      // A reply that was still streaming when the page unloaded cannot resume.
+      messages: data.messages.filter((m) => !m.pending && (m.role === "user" || m.role === "assistant") && typeof m.content === "string"),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredChat(key: string, chat: StoredChat) {
+  try {
+    if (chat.messages.length === 0) window.sessionStorage.removeItem(key);
+    else window.sessionStorage.setItem(key, JSON.stringify({ ...chat, messages: chat.messages.slice(-MAX_STORED_MESSAGES) }));
+  } catch {
+    // storage full or blocked (private mode): the chat keeps working in memory
+  }
+}
+
 /**
- * Chat state lives only in this hook's memory. Nothing is written to
- * localStorage/sessionStorage; reloading or closing the page clears it.
+ * Chat state lives in memory and is mirrored to this tab's sessionStorage, so a
+ * page reload keeps the conversation. It is never sent to or stored on the
+ * server, and the browser discards it when the tab is closed or Clear is pressed.
  */
-export function useChat(opts: { preferredLanguage?: string | null } = {}) {
+export function useChat(opts: { preferredLanguage?: string | null; storageKey?: string } = {}) {
+  const storageKey = opts.storageKey ?? STORAGE_KEY;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [uiLanguage, setUiLanguage] = useState<LanguageCode>(DEFAULT_LANGUAGE);
   const [explicitLanguage, setExplicitLanguage] = useState<LanguageCode | null>(null);
@@ -63,10 +102,27 @@ export function useChat(opts: { preferredLanguage?: string | null } = {}) {
   const abortRef = useRef<AbortController | null>(null);
   const sessionIdRef = useRef<string>(newId());
   const sessionStartedRef = useRef(false);
+  const [restored, setRestored] = useState(false);
+
+  // Restore after mount (sessionStorage is not available during server rendering).
+  useEffect(() => {
+    const stored = loadStoredChat(storageKey);
+    if (stored) {
+      setMessages(stored.messages);
+      setUiLanguage(stored.explicitLanguage ?? stored.uiLanguage);
+      setExplicitLanguage(stored.explicitLanguage);
+      sessionIdRef.current = stored.sessionId || sessionIdRef.current;
+      sessionStartedRef.current = stored.messages.length > 0;
+    } else {
+      setUiLanguage(initialLanguage(opts.preferredLanguage));
+    }
+    setRestored(true);
+  }, [opts.preferredLanguage, storageKey]);
 
   useEffect(() => {
-    setUiLanguage(initialLanguage(opts.preferredLanguage));
-  }, [opts.preferredLanguage]);
+    if (!restored) return;
+    saveStoredChat(storageKey, { messages, uiLanguage, explicitLanguage, sessionId: sessionIdRef.current });
+  }, [messages, uiLanguage, explicitLanguage, restored, storageKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -209,7 +265,12 @@ export function useChat(opts: { preferredLanguage?: string | null } = {}) {
     abortRef.current?.abort();
     setMessages([]);
     setNotice(null);
-  }, []);
+    try {
+      window.sessionStorage.removeItem(storageKey);
+    } catch {
+      // ignore
+    }
+  }, [storageKey]);
 
   const sendFeedback = useCallback(
     (id: string, value: 1 | -1) => {
@@ -237,5 +298,6 @@ export function useChat(opts: { preferredLanguage?: string | null } = {}) {
     retry,
     clear,
     sendFeedback,
+    restored,
   };
 }

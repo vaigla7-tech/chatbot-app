@@ -21,7 +21,7 @@
   "sources.faq": "Korduma kippuvad küsimused",
   "sources.document": "Ametlik dokument",
   "notice.disclaimer": "See AI-assistent annab ainult üldist teavet ega paku isikupõhist finantsnõustamist.",
-  "notice.privacy": "Palun ärge jagage selles vestluses paroole, kinnituskoode, pangaandmeid ega isikut tõendavaid dokumente. Vestlusi ei salvestata ja need kustutatakse, kui lehe sulgete.",
+  "notice.privacy": "Palun ärge jagage selles vestluses paroole, kinnituskoode, pangaandmeid ega isikut tõendavaid dokumente. Vestlusi ei salvestata meie serverites: need jäävad ainult sellesse brauseri vahekaardile ja kustutatakse, kui selle sulgete või vestluse tühjendate.",
   "notice.privacyTitle": "Privaatsus",
   "notice.accountSpecific": "Oma kontoga seotud küsimuste korral võtke palun ühendust Lendermarketi klienditoega kinnitatud kanali kaudu.",
   "notice.redacted": "Teie turvalisuse huvides eemaldati teie sõnumist enne töötlemist mõned isikuandmed.",

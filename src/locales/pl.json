@@ -21,7 +21,7 @@
   "sources.faq": "Najczęściej zadawane pytania",
   "sources.document": "Oficjalny dokument",
   "notice.disclaimer": "Ten asystent AI udziela wyłącznie ogólnych informacji i nie świadczy spersonalizowanego doradztwa finansowego.",
-  "notice.privacy": "Nie udostępniaj w tym czacie haseł, kodów weryfikacyjnych, danych bankowych ani dokumentów tożsamości. Rozmowy nie są zapisywane i są usuwane po zamknięciu tej strony.",
+  "notice.privacy": "Nie udostępniaj w tym czacie haseł, kodów weryfikacyjnych, danych bankowych ani dokumentów tożsamości. Rozmowy nie są zapisywane na naszych serwerach: pozostają tylko w tej karcie przeglądarki i są usuwane po jej zamknięciu lub wyczyszczeniu czatu.",
   "notice.privacyTitle": "Prywatność",
   "notice.accountSpecific": "W sprawach dotyczących Twojego konta skontaktuj się z obsługą klienta Lendermarket za pośrednictwem zweryfikowanego kanału.",
   "notice.redacted": "Ze względów bezpieczeństwa niektóre dane osobowe zostały usunięte z Twojej wiadomości przed jej przetworzeniem.",

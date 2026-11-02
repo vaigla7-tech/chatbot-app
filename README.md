@@ -6,7 +6,7 @@ A multilingual, source-grounded investor-information chatbot for Lendermarket, w
 - **Admin dashboard** at `/admin`. It has individual accounts, roles, server-side authorization and an audit log.
 - **Answers come only from approved knowledge**: published documents, published FAQs and approved website pages. Every answer carries validated source citations. When no verified source exists, the bot says so and offers a support contact.
 - **7 languages**: EN, ET, ES, IT, FR, DE and PL. The bot detects the language automatically, and the user can also pick one manually.
-- **Privacy**: conversations live only in the browser tab. The database stores no transcripts and no raw questions. Analytics record topic categories only.
+- **Privacy**: conversations live only in the browser tab (kept in `sessionStorage`, so they survive a reload but are deleted when the tab closes). The database stores no transcripts and no raw questions. Analytics record topic categories only.
 
 > This assistant provides general information only and does not offer personalised financial advice.
 
