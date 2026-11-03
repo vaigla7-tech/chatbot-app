@@ -52,7 +52,7 @@ The app is built and run entirely on Railway. It does not need a local server or
    | `WIDGET_ALLOWED_ORIGINS` | for the widget | e.g. `https://www.lendermarket.com https://lendermarket.com` |
    | `WEBSITE_ALLOWED_HOSTS` | optional | Hosts that may be imported as website sources |
 
-3. **Deploy**: push to `main`. [railway.json](railway.json) configures the build (`npm run build`), the pre-deploy step (`npx prisma migrate deploy && npx prisma db seed`), the start command (binds `0.0.0.0:$PORT`) and the health check (`/api/health`).
+3. **Deploy**: push to `main`. [railway.json](railway.json) configures the build (`npm run build`), the start command and the health check (`/api/health`). The start script ([scripts/start.sh](scripts/start.sh)) applies migrations (`prisma migrate deploy`) and the idempotent seed, then starts Next.js on `0.0.0.0:$PORT`.
 4. **First admin**: open `https://<app>/admin/setup` and enter the value of `ADMIN_AUTH_SECRET` as the setup token. This creates the owner account. The setup page disables itself once an admin exists.
 5. **Go-live checklist** (in the dashboard):
    - Settings → **Support escalation destination**: enter the *verified* official support link or email.
@@ -103,7 +103,7 @@ Optional attributes: `data-lang`, `data-position="left"`, `data-color="#8550F6"`
 
 | Symptom | Check |
 |---|---|
-| Deploy fails in pre-deploy | Is `DATABASE_URL` set on the app service? See the Railway deploy logs for the Prisma error. |
+| `/api/health` shows `databaseDetail` | It names the cause: `not_configured` (no `DATABASE_URL` on the app service), `unreachable`, `authentication_failed`, `invalid_url` or `not_migrated`. Migration output is in the deploy logs, lines starting with `[start]`. |
 | `/api/health` shows `database: unavailable` | The Postgres service is down or `DATABASE_URL` is wrong. Investors see the localised "temporary technical issue" message. |
 | Every answer says "couldn't find verified information" | No **published** and **ready** documents or FAQs match. Check the Knowledge Base filter "Live". Without `OPENAI_API_KEY`, retrieval is keyword-only. |
 | "Assistant temporarily unavailable" | AI Settings → Test the active model. See Audit & Errors for the sanitized error code. |
