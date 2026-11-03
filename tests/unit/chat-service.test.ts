@@ -209,6 +209,16 @@ describe("chat turn", () => {
   });
 });
 
+describe("escalation reasons", () => {
+  it("keeps the detected intent when no source answers an account-specific question", async () => {
+    state.sufficient = false;
+    state.hits = [];
+    setAdapterOverrides({ anthropic: mockAdapter("anthropic", "x") });
+    const { done } = await run({ message: "My withdrawal has not arrived yet, where is my money?" });
+    expect(done?.escalation).toEqual({ suggested: true, reasonCode: "withdrawal_issue" });
+  });
+});
+
 describe("cross-language retrieval", () => {
   it("retries retrieval with an English query when a non-English question finds nothing", async () => {
     const { retrieveKnowledge } = await import("@/lib/retrieval");

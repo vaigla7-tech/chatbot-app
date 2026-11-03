@@ -241,7 +241,7 @@ export async function runChatTurn(
   };
 
   if (!retrieval.sufficient) {
-    await finishInsufficient("insufficient_information", "no_information");
+    await finishInsufficient("insufficient_information", intentReason ?? "no_information");
     return;
   }
 
@@ -292,7 +292,7 @@ export async function runChatTurn(
   }
   if (parsed.noAnswer || uncitedFacts) {
     const answer = t(language, "answer.insufficient");
-    emit({ type: "done", answer, language, sources: [], status: "insufficient_information", escalation: { suggested: true, reasonCode: "no_information" } });
+    emit({ type: "done", answer, language, sources: [], status: "insufficient_information", escalation: { suggested: true, reasonCode: intentReason ?? "no_information" } });
     await recordEvent({ ...baseEvent, ...usage, category, answered: false, answerStatus: "insufficient_information", escalated: true, latencyMs: Date.now() - started });
     return;
   }
