@@ -98,13 +98,14 @@ describe("chat turn", () => {
     expect(done?.escalation.suggested).toBe(false);
   });
 
-  it("does not call the model and offers support when no verified source exists", async () => {
+  it("never asks the model to answer and offers support when no verified source exists", async () => {
     state.sufficient = false;
     state.hits = [];
     const seen: GenerateRequest[] = [];
-    setAdapterOverrides({ anthropic: mockAdapter("anthropic", "invented", seen) });
-    const { done } = await run({ message: "What will the interest rate be next year?", language: "de" });
-    expect(seen).toHaveLength(0);
+    setAdapterOverrides({ anthropic: mockAdapter("anthropic", "What will the interest rate be next year?", seen) });
+    const { done } = await run({ message: "Wie hoch wird der Zinssatz nächstes Jahr sein?", language: "de" });
+    // Only the search-query translation may run; no answer is generated without sources.
+    expect(seen.every((r) => r.system.startsWith("Translate the investor question"))).toBe(true);
     expect(done?.status).toBe("insufficient_information");
     expect(done?.answer).toMatch(/keine verifizierten Informationen/);
     expect(done?.escalation).toEqual({ suggested: true, reasonCode: "no_information" });
@@ -205,6 +206,35 @@ describe("chat turn", () => {
   it("rejects messages over the configured length", async () => {
     const { error } = await run({ message: "x".repeat(1600) });
     expect(error).toMatchObject({ code: "invalid_input" });
+  });
+});
+
+describe("cross-language retrieval", () => {
+  it("retries retrieval with an English query when a non-English question finds nothing", async () => {
+    const { retrieveKnowledge } = await import("@/lib/retrieval");
+    const mocked = vi.mocked(retrieveKnowledge);
+    mocked.mockImplementationOnce(async () => ({ hits: [], sufficient: false, embeddingTokens: 0 }));
+    mocked.mockImplementationOnce(async (q: string) => {
+      expect(q).toBe("Can I open multiple accounts?");
+      return { hits: [hit("faq-accounts")], sufficient: true, embeddingTokens: 0 };
+    });
+    const seen: GenerateRequest[] = [];
+    setAdapterOverrides({
+      anthropic: {
+        ...mockAdapter("anthropic", "", seen),
+        generate: async (req) => {
+          seen.push(req);
+          const text = req.system.startsWith("Translate") ? "Can I open multiple accounts?" : "Ei, ainult üks konto [S1].";
+          req.onDelta?.(text);
+          return { text, model: req.settings.model, inputTokens: 10, outputTokens: 5, refused: false };
+        },
+      },
+    });
+    const { done } = await run({ message: "Kas ma saan avada mitu kontot?" });
+    expect(done?.language).toBe("et");
+    expect(done?.status).toBe("answered");
+    expect(done?.sources).toHaveLength(1);
+    expect(seen).toHaveLength(2);
   });
 });
 
