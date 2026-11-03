@@ -111,6 +111,7 @@ Optional attributes: `data-lang`, `data-position="left"`, `data-color="#8550F6"`
 | Document stuck in "processing" | The service restarted mid-job. Click **Reprocess**. |
 | PDF ingestion fails with "no readable text" | The PDF is scanned (images only). Run OCR before uploading. |
 | Admin setup says "Invalid setup token" | The token must equal the `ADMIN_AUTH_SECRET` value exactly. |
+| Forgot the admin password | Open `/admin/reset` (link on the sign-in page) and use the `ADMIN_AUTH_SECRET` value as the setup token. All sessions of that account are signed out and the reset is written to the audit log. |
 
 ## Branding
 

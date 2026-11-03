@@ -13,6 +13,7 @@ export function proxy(req: NextRequest) {
     pathname.startsWith("/admin") &&
     !pathname.startsWith("/admin/login") &&
     !pathname.startsWith("/admin/setup") &&
+    !pathname.startsWith("/admin/reset") &&
     !req.cookies.has("lm_admin_session")
   ) {
     const url = req.nextUrl.clone();

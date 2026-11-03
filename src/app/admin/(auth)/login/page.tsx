@@ -47,6 +47,9 @@ export default function LoginPage() {
         </div>
         {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
         <Button type="submit" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</Button>
+        <Link href="/admin/reset" className="text-center text-xs text-ocean underline">
+          Forgot your password?
+        </Link>
         {setupAvailable && (
           <p className="text-center text-xs text-muted">
             No administrator exists yet. <Link className="font-semibold text-ocean underline" href="/admin/setup">Run first-time setup</Link>
