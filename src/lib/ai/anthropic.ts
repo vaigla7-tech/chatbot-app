@@ -5,13 +5,23 @@ import { ProviderError, type AIProviderAdapter, type GenerateRequest, type Gener
 // Models that support server-side refusal fallbacks (`fallbacks: "default"`).
 const SERVER_FALLBACK_MODELS = /^claude-(opus-5|opus-5-5|sonnet-5-5|fable-5-1|fable-5)$/;
 
+/** The provider's own error text (never contains the key), shortened for the admin UI and logs. */
+function providerDetail(error: InstanceType<typeof Anthropic.APIError>): string {
+  const body = error.error as { error?: { message?: string } } | undefined;
+  const text = body?.error?.message ?? "";
+  return text ? `: ${text.replace(/sk-ant-[A-Za-z0-9_-]+/g, "[key]").slice(0, 200)}` : "";
+}
+
 function toProviderError(error: unknown): ProviderError {
   if (error instanceof ProviderError) return error;
-  if (error instanceof Anthropic.AuthenticationError || error instanceof Anthropic.PermissionDeniedError)
-    return new ProviderError("anthropic", "auth", "Anthropic rejected the API key");
+  if (error instanceof Anthropic.AuthenticationError)
+    return new ProviderError("anthropic", "auth", `Anthropic rejected the API key as invalid (HTTP 401)${providerDetail(error)}`);
+  if (error instanceof Anthropic.PermissionDeniedError)
+    return new ProviderError("anthropic", "auth", `The API key is valid but not allowed to use this model or workspace (HTTP 403)${providerDetail(error)}`);
   if (error instanceof Anthropic.RateLimitError) return new ProviderError("anthropic", "rate_limited", "Anthropic rate limit reached");
   if (error instanceof Anthropic.NotFoundError) return new ProviderError("anthropic", "bad_request", "Anthropic model not found");
-  if (error instanceof Anthropic.BadRequestError) return new ProviderError("anthropic", "bad_request", "Anthropic rejected the request parameters");
+  if (error instanceof Anthropic.BadRequestError)
+    return new ProviderError("anthropic", "bad_request", `Anthropic rejected the request${providerDetail(error)}`);
   if (error instanceof Anthropic.APIConnectionTimeoutError) return new ProviderError("anthropic", "timeout", "Anthropic request timed out");
   if (error instanceof Anthropic.APIConnectionError) return new ProviderError("anthropic", "unavailable", "Could not reach Anthropic");
   if (error instanceof Anthropic.APIError) return new ProviderError("anthropic", "unavailable", `Anthropic API error ${error.status ?? ""}`.trim());

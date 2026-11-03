@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { api } from "@/components/admin/api";
 import { ErrorNote, PageHeader } from "@/components/admin/shell";
-import { BarList, DailyBars, StatTile, pct } from "@/components/admin/charts";
+import { BarList, DailyBars, StatTile, fmtLatency, pct } from "@/components/admin/charts";
 import type { AnalyticsReport } from "@/components/admin/types";
 import { LANGUAGES, isLanguageCode } from "@/lib/languages";
 
@@ -47,8 +47,8 @@ export default function AnalyticsPage() {
         <StatTile label="Unanswered" value={t ? pct(t.unansweredRate) : "…"} hint={t ? `${t.unanswered} questions` : undefined} />
         <StatTile label="Provider errors" value={t ? String(t.errors) : "…"} />
         <StatTile label="Escalation rate" value={t ? pct(t.escalationRate) : "…"} />
-        <StatTile label="Average latency" value={t?.avgLatencyMs ? `${(t.avgLatencyMs / 1000).toFixed(1)} s` : "-"} />
-        <StatTile label="p95 latency" value={t?.p95LatencyMs ? `${(t.p95LatencyMs / 1000).toFixed(1)} s` : "-"} />
+        <StatTile label="Average latency" value={fmtLatency(t?.avgLatencyMs)} />
+        <StatTile label="p95 latency" value={fmtLatency(t?.p95LatencyMs)} />
         <StatTile label="Estimated cost" value={t ? `$${t.estimatedCostUsd.toFixed(2)}` : "…"} hint={t ? `${t.tokens.toLocaleString()} tokens` : undefined} />
       </div>
 

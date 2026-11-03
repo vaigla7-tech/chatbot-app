@@ -4,8 +4,10 @@ import { ProviderError, type AIProviderAdapter, type GenerateRequest, type Gener
 
 function toProviderError(error: unknown): ProviderError {
   if (error instanceof ProviderError) return error;
-  if (error instanceof OpenAI.AuthenticationError || error instanceof OpenAI.PermissionDeniedError)
-    return new ProviderError("openai", "auth", "OpenAI rejected the API key");
+  if (error instanceof OpenAI.AuthenticationError)
+    return new ProviderError("openai", "auth", "OpenAI rejected the API key as invalid (HTTP 401)");
+  if (error instanceof OpenAI.PermissionDeniedError)
+    return new ProviderError("openai", "auth", "The OpenAI API key is valid but not allowed to use this model or project (HTTP 403)");
   if (error instanceof OpenAI.RateLimitError) return new ProviderError("openai", "rate_limited", "OpenAI rate limit reached");
   if (error instanceof OpenAI.NotFoundError) return new ProviderError("openai", "bad_request", "OpenAI model not found");
   if (error instanceof OpenAI.BadRequestError) return new ProviderError("openai", "bad_request", "OpenAI rejected the request parameters");

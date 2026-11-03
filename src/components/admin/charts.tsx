@@ -51,7 +51,7 @@ export function DailyBars({ days }: { days: Array<{ day: string; questions: numb
             <button
               key={d.day}
               type="button"
-              className="group flex h-full flex-1 items-end focus:outline-none"
+              className="group flex h-full max-w-12 flex-1 items-end focus:outline-none"
               onMouseEnter={() => setHover(i)}
               onFocus={() => setHover(i)}
               aria-label={`${d.day}: ${d.questions} questions, ${d.answered} answered`}
@@ -101,5 +101,9 @@ export function DailyBars({ days }: { days: Array<{ day: string; questions: numb
     </figure>
   );
 }
+
+/** Latency label: milliseconds below one second, otherwise seconds. */
+export const fmtLatency = (ms: number | null | undefined) =>
+  ms == null ? "-" : ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`;
 
 export const pct = (v: number | null) => (v === null ? "-" : `${Math.round(v * 1000) / 10}%`);

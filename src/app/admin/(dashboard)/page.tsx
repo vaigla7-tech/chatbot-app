@@ -6,7 +6,7 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { api } from "@/components/admin/api";
 import { ErrorNote, PageHeader } from "@/components/admin/shell";
-import { BarList, DailyBars, StatTile, pct } from "@/components/admin/charts";
+import { BarList, DailyBars, StatTile, fmtLatency, pct } from "@/components/admin/charts";
 import type { AnalyticsReport } from "@/components/admin/types";
 
 interface DocSummary {
@@ -61,7 +61,7 @@ export default function OverviewPage() {
         <StatTile label="Unanswered rate" value={t ? pct(t.unansweredRate) : "…"} />
         <StatTile label="Escalation rate" value={t ? pct(t.escalationRate) : "…"} hint={t ? `${t.escalationClicks} support clicks` : undefined} />
         <StatTile label="Feedback" value={t ? `${t.feedbackPositive} helpful · ${t.feedbackNegative} not` : "…"} />
-        <StatTile label="Average latency" value={t?.avgLatencyMs ? `${(t.avgLatencyMs / 1000).toFixed(1)} s` : "-"} hint={t?.p95LatencyMs ? `p95 ${(t.p95LatencyMs / 1000).toFixed(1)} s` : undefined} />
+        <StatTile label="Average latency" value={fmtLatency(t?.avgLatencyMs)} hint={t?.p95LatencyMs != null ? `p95 ${fmtLatency(t.p95LatencyMs)}` : undefined} />
         <StatTile label="Estimated AI cost" value={t ? `$${t.estimatedCostUsd.toFixed(2)}` : "…"} hint={t ? `${t.tokens.toLocaleString()} tokens` : undefined} />
       </div>
 
