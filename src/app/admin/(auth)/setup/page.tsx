@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { api } from "@/components/admin/api";
 import { AuthFrame } from "@/components/admin/auth-frame";
@@ -37,7 +38,12 @@ export default function SetupPage() {
   return (
     <AuthFrame title="First-time setup">
       {available === false ? (
-        <p className="text-sm text-muted">Setup is complete. Please sign in with an existing administrator account.</p>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted">Setup is complete. Please sign in with an existing administrator account.</p>
+          <Link href="/admin/login" className={buttonVariants()}>
+            Go to sign in
+          </Link>
+        </div>
       ) : (
         <form onSubmit={submit} className="flex flex-col gap-4">
           <p className="text-xs text-muted">
